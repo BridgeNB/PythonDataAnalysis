@@ -5,6 +5,14 @@ import os
 import time
 from datetime import datetime
 
+from time import mktime
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib import style
+style.use("dark_background")
+
+import re
+
 # Define path name for data location
 path = "/Users/zhengyangqiao/Desktop/CS390/PythonSelf/intraQuarter"
 
@@ -22,7 +30,8 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                                  'Price',
                                  'stock_p_change',
                                  'SP500',
-                                 'sp500_p_change'])
+                                 'sp500_p_change',
+                                 'Difference'])
 
     # Load csv into data frame One step so simple
     sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
@@ -30,7 +39,7 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
     ticker_list = []
 
     # exclude the first file
-    for each_dir in stock_list[1:50]:
+    for each_dir in stock_list[1:25]:
         #
         each_file = os.listdir(each_dir)
         # Use split to tackle the last element of directory - ticker, -1 catches the
@@ -53,7 +62,7 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                 source = open(full_file_path, 'r').read()
 
                 try:
-
+				# Split the float value from HTML
                     value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
 
                     try:
@@ -75,12 +84,10 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                     if not starting_sp500_value:
                         starting_sp500_value = sp500_value
 
-
                     stock_p_change = ((stock_price - starting_stock_value) / starting_stock_value) * 100
                     sp500_p_change = ((sp500_value - starting_sp500_value) / starting_sp500_value) * 100
 
-
-
+                    # pandas append more data into structure
                     df = df.append({'Date':date_stamp,
                                     'Unix':unix_time,
                                     'Ticker':ticker,
@@ -88,17 +95,30 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                                     'Price':stock_price,
                                     'stock_p_change':stock_p_change,
                                     'SP500':sp500_value,
-                                    'sp500_p_change':sp500_p_change,},
+                                    'sp500_p_change':sp500_p_change,
+                                    'Difference':stock_p_change - sp500_p_change},
                                    ignore_index = True)
 
                 except Exception as e:
                     pass
 
+    for each_ticker in ticker_list:
+        try:
+            print("It works here")
+            plot_df = df[(df['Ticker'] == each_ticker)]
+            plot_df = plot_df.set_index(['Date'])
+            plot_df['Difference'].plot(label = each_ticker)
+            plt.legend()
+
+        except:
+            pass
+
+
+    plt.show()
 
     save = gather.replace(' ','').replace(')','').replace('(','').replace('/','') + ('.csv')
     print(save)
     df.to_csv(save)
-
 
 Key_Stats()
 
