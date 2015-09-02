@@ -65,7 +65,12 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
 
                 try:
 				# Split the float value from HTML
-                    value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                    try:
+                        value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                    except Exception as e:
+                        value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                        # print(str(e))
+                        # time.sleep(15)
 
                     try:
                         sp500_date = datetime.fromtimestamp(unix_time).strftime("%Y-%m-%d")
@@ -77,8 +82,31 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                         row = sp500_df[(sp500_df.index == sp500_date)]
                         sp500_value = float(row["Adjusted Close"])
                     # Get the stock price
-                    stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0]);
+                    try:
+                        stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+                    except Exception, e:
+                        try:
+                            stock_price = (source.split('</small><big><b>')[1].split('</b></big>')[0])
+                            #<span id="yfs_l10_aig">31.80</span>'
+                            stock_price = re.search(r'(\d{1,8}\.\d{1,8})',stock_price)
+                            stock_price = float(stock_price.group(1))
 
+                            print(stock_price)
+                            # time.sleep(15)
+                        except Exception as e:
+                            try:
+                                stock_price = (source.split('<span class="time_rtq_ticker">')[1].split('</span>')[0])
+
+                                stock_price = re.search(r'(\d{1,8}\.\d{1,8})',stock_price)
+                                stock_price = float(stock_price.group(1))
+                            except Exception as e:
+                                print(str(e))
+
+                            # print('Latest:',stock_price)
+                            # print('stock_price', str(e), ticker, file)
+                            # time.sleep(15)
+
+                        #print(str(e), ticker, file)
                     # if not is a condition which is used to check whether the list
                     # is empty or not
                     if not starting_stock_value:
