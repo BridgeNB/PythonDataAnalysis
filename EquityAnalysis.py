@@ -33,7 +33,8 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                                  'stock_p_change',
                                  'SP500',
                                  'sp500_p_change',
-                                 'Difference'])
+                                 'Difference',
+                                 'Status'])
 
     # Load csv into data frame One step so simple
     sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
@@ -117,6 +118,13 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                     stock_p_change = ((stock_price - starting_stock_value) / starting_stock_value) * 100
                     sp500_p_change = ((sp500_value - starting_sp500_value) / starting_sp500_value) * 100
 
+                    difference = stock_p_change - sp500_p_change
+
+                    if difference > 0:
+                        status = 'outperform'
+                    else:
+                        status = "uderperform"
+
                     # pandas append more data into structure
                     df = df.append({'Date':date_stamp,
                                     'Unix':unix_time,
@@ -126,7 +134,8 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
                                     'stock_p_change':stock_p_change,
                                     'SP500':sp500_value,
                                     'sp500_p_change':sp500_p_change,
-                                    'Difference':stock_p_change - sp500_p_change},
+                                    'Difference':stock_p_change - sp500_p_change,
+                                    'Status':status},
                                    ignore_index = True)
 
                 except Exception as e:
@@ -137,7 +146,13 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
             print("It works here")
             plot_df = df[(df['Ticker'] == each_ticker)]
             plot_df = plot_df.set_index(['Date'])
-            plot_df['Difference'].plot(label = each_ticker)
+
+            if plot_df['Status'][-1] == "underperform":
+                color = 'r'
+            else:
+                color = 'g'
+
+            plot_df['Difference'].plot(label = each_ticker, color = color)
             plt.legend()
 
         except:
