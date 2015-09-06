@@ -143,7 +143,7 @@ def Key_Stats(gather ="Total Debt/Equity (mrq)"):
 
     for each_ticker in ticker_list:
         try:
-            print("It works here")
+           # print("It works here")
             plot_df = df[(df['Ticker'] == each_ticker)]
             plot_df = plot_df.set_index(['Date'])
 
