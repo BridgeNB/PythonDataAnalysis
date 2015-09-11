@@ -14,6 +14,7 @@ from matplotlib import style
 style.use("dark_background")
 
 import re
+import urllib
 
 # Define path name for data location
 path = "/Users/zhengyangqiao/Desktop/CS390/PythonSelf/intraQuarter"
@@ -33,8 +34,9 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
                                  'Price',
                                  'stock_p_change',
                                  'SP500',
-                                 'sp500_p_change'])
-                                 # 'Difference',
+                                 'sp500_p_change',
+                                 'Difference',
+                                 'Status'])
                                  # ##############
                                  # 'DE Ratio',
                                  # 'Trailing P/E',
@@ -102,7 +104,10 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
                 source = open(full_file_path, 'r').read()
 
                 try:
-                    value = float(source.split(gather+':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                    try:
+                        value = float(source.split(gather+':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+                    except:
+                        value = float(source.split(gather+':</td>\n<td class="yfnc_tabledata1">')[1].split('</td>')[0])
 
                     try:
                         sp500_date = datetime.fromtimestamp(unix_time).strftime("%Y-%m-%d")
@@ -114,8 +119,28 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
                         row = sp500_df[(sp500_df.index == sp500_date)]
                         sp500_value = float(row["Adjusted Close"])
                     # # Get the stock price
-                    # try:
+                    try:
                         stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+                    except:
+                        try:
+                            stock_price = (source.split('</small><big><b>')[1].split('</b></big>')[0])
+                            stock_price = re.search(r'(\d{1,8}\.\d{1,8})', stock_price)
+                            stock_price = float(stock_price.group(1))
+                        except:
+                            try:
+                                stock_price = (source.split('<span class="time_rtq_ticker">')[1].split('</span>')[0])
+                                #print(stock_price)
+
+                                stock_price = re.search(r'(\d{1,8}\.\d{1,8})', stock_price)
+
+                                stock_price = float(stock_price.group(1))
+                                #print(stock_price)
+
+                            except:
+
+                                print('wtf stock price lol',ticker,file, value)
+                                time.sleep(5)
+
                     # except Exception, e:
                     #     try:
                     #         stock_price = (source.split('</small><big><b>')[1].split('</b></big>')[0])
@@ -148,13 +173,16 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 
                     stock_p_change = ((stock_price - starting_stock_value) / starting_stock_value) * 100
                     sp500_p_change = ((sp500_value - starting_sp500_value) / starting_sp500_value) * 100
+                    location = len(df['Date'])
 
                     difference = stock_p_change - sp500_p_change
 
-                    # if difference > 0:
-                    #     status = 'outperform'
-                    # else:
-                    #     status = "uderperform"
+                    print(difference)
+
+                    if difference > 0:
+                        status = 'outperform'
+                    else:
+                        status = "uderperform"
                     #
                     # if value_list.count("N/A") > 0:
                     #     pass
@@ -170,7 +198,9 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
                                     'stock_p_change':stock_p_change,
                                     'SP500':sp500_value,
                                     'sp500_p_change':sp500_p_change,
-                                    'Difference':difference},
+                                     #######################
+                                    'Difference':difference,
+                                    'Status':status},
                                     ignore_index = True)
                 except Exception as e:
                     pass
@@ -219,26 +249,27 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
                                                # ignore_index=True)
 
 
-    # for each_ticker in ticker_list:
-    #     try:
-    #        # print("It works here")
-    #         plot_df = df[(df['Ticker'] == each_ticker)]
-    #         plot_df = plot_df.set_index(['Date'])
-    #
-    #         if plot_df['Status'][-1] == "underperform":
-    #             color = 'r'
-    #         else:
-    #             color = 'g'
-    #
-    #         plot_df['Difference'].plot(label = each_ticker, color = color)
-    #         plt.legend()
-    #
-    #     except:
-    #         pass
-    #
-    #
-    # plt.show()
-    #
+    for each_ticker in ticker_list:
+        try:
+           # print("It works here")
+            plot_df = df[(df['Ticker'] == each_ticker)]
+            plot_df = plot_df.set_index(['Date'])
+
+            if plot_df['Status'][-1] == "underperform":
+                color = 'r'
+            else:
+                color = 'g'
+
+            plot_df['Difference'].plot(label=each_ticker, color=color)
+            plt.legend()
+        except Exception as e:
+            print(str(e))
+
+    plt.show()
+
+    save = gather.replace(' ','').replace(')','').replace('(','').replace('/','')+str('.csv')
+    print(save)
+    df.to_csv(save)
 
 
 Key_Stats()
